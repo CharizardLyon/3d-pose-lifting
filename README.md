@@ -1,4 +1,4 @@
-#Dataset
+# Dataset
 
 Change the .h5 files in the pose-2d for .csv and also leave the session at the start of the folder
 To create the dataset use "extract_dataset.py" and change the paths, also the structure of the folder needs to be:
@@ -20,7 +20,7 @@ base: <br />
 ---camD.mp4 <br />
 ---camE.mp4 <br />
 
-#Training
+# Training
 
 in the train.py you can change the arguments for the training and to run it use the terminal
 in the base path of the project and the run:
