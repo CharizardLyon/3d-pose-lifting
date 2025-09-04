@@ -37,14 +37,11 @@ def train():
         "data/splits/val.json", use_images=True, transform=image_transform
     )
 
-    train_subset = Subset(train_dataset, list(range(20)))
-    val_subset = Subset(val_dataset, list(range(20)))
-
     train_loader = DataLoader(
-        train_subset, batch_size=batch_size, shuffle=True, num_workers=2
+        train_dataset, batch_size=batch_size, shuffle=True, num_workers=2
     )
     val_loader = DataLoader(
-        val_subset, batch_size=batch_size, shuffle=False, num_workers=2
+        val_dataset, batch_size=batch_size, shuffle=False, num_workers=2
     )
 
     # Model initialization
