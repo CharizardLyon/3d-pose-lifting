@@ -113,7 +113,7 @@ def train():
         # Save best model checkpoint
         if val_loss < best_val_loss:
             best_val_loss = val_loss
-            save_path = "C:/Users/Chari/OneDrive/Escritorio/DATA/Monocular3d/3d-pose-lifting/checkpoints/best_model.pth"
+            save_path = "checkpoints/best_model.pth"
             os.makedirs(os.path.dirname(save_path), exist_ok=True)
             torch.save(model.state_dict(), save_path)
             print("Saved new best model")

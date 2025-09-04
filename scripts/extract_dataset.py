@@ -179,7 +179,6 @@ def build_dataset(root_dir, out_dir):
 
 
 if __name__ == "__main__":
-    # Input: folder containing all sessions (session_rangel_der, session_rangel_izq, ...)
-    root_input = r"C:/Users/Chari/OneDrive/Escritorio/DATA/Monocular3d/raw_test"
+    root_input = r"base_path"
     output = "data"
     build_dataset(root_input, output)
