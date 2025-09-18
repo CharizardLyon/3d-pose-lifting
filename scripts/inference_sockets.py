@@ -6,6 +6,9 @@ import cv2
 import mediapipe as mp
 import numpy as np
 import torch
+import json
+import socket
+import time
 from models.hybrid_resnet import HybridResnet
 from torchvision import transforms
 
@@ -17,6 +20,18 @@ hands = mp_hands.Hands(
     min_detection_confidence=0.5,
     min_tracking_confidence=0.5,
 )
+
+# Initialize socket
+HOST = "127.0.0.1"
+PORT = 5005
+
+server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+server_socket.bind((HOST, PORT))
+server_socket.listen()
+
+print(f"Waiting for Unity client to connect on {HOST}:{PORT}...")
+conn, addr = server_socket.accept()
+print(f"Connected by {addr}")
 
 # Load PyTorch model
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -67,6 +82,14 @@ def get_hand_keypoints_2d(image):
         return None
 
 
+def send_prediction(pred_3d):
+    pred_list = pred_3d.tolist()
+    msg = json.dumps(pred_list)
+    msg = msg.encode("utf-8")
+    length = len(msg)
+    conn.sendall(length.to_bytes(4, "big") + msg)
+
+
 video_path = "path/to/video"
 cap = cv2.VideoCapture(video_path)
 
@@ -82,6 +105,8 @@ while True:
     if kp2d is not None:
         pred_3d = infer_frame(frame, kp2d)
         print(f"Frame {frame_index} Prediction:\n", pred_3d)
+        send_prediction(pred_3d)
+        time.sleep(1)
     else:
         print(f"Frame {frame_index} - No hand detected")
 
