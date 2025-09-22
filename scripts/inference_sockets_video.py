@@ -1,6 +1,6 @@
 import sys
 
-sys.path.append("path/to/root")
+sys.path.append("D:/3d-pose-lifting")
 
 import cv2
 import mediapipe as mp
@@ -21,24 +21,30 @@ hands = mp_hands.Hands(
     min_tracking_confidence=0.5,
 )
 
-# Initialize socket
+# === Socket: Python como CLIENTE (Unity es el servidor) ===
 HOST = "127.0.0.1"
 PORT = 5005
 
-server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-server_socket.bind((HOST, PORT))
-server_socket.listen()
-
-print(f"Waiting for Unity client to connect on {HOST}:{PORT}...")
-conn, addr = server_socket.accept()
-print(f"Connected by {addr}")
+sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+print(f"Conectando a Unity en {HOST}:{PORT} ...")
+# pequeño retry por si Unity tarda en levantar
+for i in range(20):
+    try:
+        sock.connect((HOST, PORT))
+        print("Conectado a Unity ✅")
+        break
+    except OSError as e:
+        print(f"Reintento {i+1}/20: {e}")
+        time.sleep(0.5)
+else:
+    raise RuntimeError("No se pudo conectar a Unity en 127.0.0.1:5005")
 
 # Load PyTorch model
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 model = HybridResnet(num_joints=21)
 model.load_state_dict(
     torch.load(
-        "path/to/model",
+        "../checkpoints/resnet/best_model.pth",
         map_location=device,
     )
 )
@@ -87,14 +93,14 @@ def send_prediction(pred_3d):
     msg = json.dumps(pred_list)
     msg = msg.encode("utf-8")
     length = len(msg)
-    conn.sendall(length.to_bytes(4, "big") + msg)
+    sock.sendall(length.to_bytes(4, "big") + msg)
 
 
-video_path = "path/to/video"
+video_path = "test5.mp4"
 cap = cv2.VideoCapture(video_path)
 
 frame_index = 0
-fps = cap.get(cv2.CAP_PROP_FPS) or 30
+fps = cap.get(cv2.CAP_PROP_FPS) or 120
 
 while True:
     ret, frame = cap.read()
@@ -106,7 +112,7 @@ while True:
         pred_3d = infer_frame(frame, kp2d)
         print(f"Frame {frame_index} Prediction:\n", pred_3d)
         send_prediction(pred_3d)
-        time.sleep(1)
+        #time.sleep(0.2)
     else:
         print(f"Frame {frame_index} - No hand detected")
 

@@ -15,8 +15,8 @@ from torch.utils.data import Subset
 
 def train():
     # Config
-    num_epochs = 1
-    batch_size = 1
+    num_epochs = 50
+    batch_size = 8
     lr = 1e-4
     num_joints = 21
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")

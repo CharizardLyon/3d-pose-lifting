@@ -1,6 +1,6 @@
 import sys
 
-sys.path.append("path/to/root")
+sys.path.append("D:/3d-pose-lifting")
 
 import cv2
 import mediapipe as mp
@@ -23,7 +23,7 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 model = HybridResnet(num_joints=21)
 model.load_state_dict(
     torch.load(
-        "path/to/model",
+        "../checkpoints-resnet18/best_model.pth",
         map_location=device,
     )
 )
@@ -67,7 +67,7 @@ def get_hand_keypoints_2d(image):
         return None
 
 
-video_path = "path/to/video"
+video_path = "camA.mp4"
 cap = cv2.VideoCapture(video_path)
 
 frame_index = 0

@@ -4,3 +4,8 @@ __pycache__
 test.py
 checkpoints/Hand
 checkpoints/Resnet
+checkpoints/hrnet
+
+scripts/*.mp4
+scripts/read_socket.cs
+logs/
