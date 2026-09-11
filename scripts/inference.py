@@ -1,4 +1,5 @@
 import sys
+import csv
 
 sys.path.append("path/to/root")
 
@@ -6,8 +7,42 @@ import cv2
 import mediapipe as mp
 import numpy as np
 import torch
+
 from models.hybrid_resnet import HybridResnet
 from torchvision import transforms
+
+VIDEO_PATH = "path/to/video"
+MODEL_PATH = "path/to/model"
+OUTPUT_CSV = "predictions_model.csv"
+
+JOINTS = [
+    "WRIST",
+
+    "THUMB_CMC",
+    "THUMB_MCP",
+    "THUMB_IP",
+    "THUMB_TIP",
+
+    "INDEX_CMC",
+    "INDEX_MCP",
+    "INDEX_IP",
+    "INDEX_TIP",
+
+    "MIDDLE_CMC",
+    "MIDDLE_MCP",
+    "MIDDLE_IP",
+    "MIDDLE_TIP", 
+
+    "RING_CMC",
+    "RING_MCP",
+    "RING_IP",
+    "RING_TIP",
+
+    "PNIKY_CMC",
+    "PINKY_MCP",
+    "PINKY_IP",
+    "PINKY_TIP",
+]
 
 # Initialize MediaPipe Hands
 mp_hands = mp.solutions.hands
@@ -23,7 +58,7 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 model = HybridResnet(num_joints=21)
 model.load_state_dict(
     torch.load(
-        "path/to/model",
+        MODEL_PATH,
         map_location=device,
     )
 )
@@ -67,25 +102,62 @@ def get_hand_keypoints_2d(image):
         return None
 
 
-video_path = "path/to/video"
-cap = cv2.VideoCapture(video_path)
+cap = cv2.VideoCapture(VIDEO_PATH)
 
 frame_index = 0
 fps = cap.get(cv2.CAP_PROP_FPS) or 30
 
-while True:
-    ret, frame = cap.read()
-    if not ret:
-        break
+with open(OUTPUT_CSV, mode="w", newline="") as csv_file:
 
-    kp2d = get_hand_keypoints_2d(frame)
-    if kp2d is not None:
-        pred_3d = infer_frame(frame, kp2d)
-        print(f"Frame {frame_index} Prediction:\n", pred_3d)
-    else:
-        print(f"Frame {frame_index} - No hand detected")
+    writer = csv.writer(csv_file)
 
-    frame_index += 1
+    #Header del CSV
+    writer.writerow([
+        "frame",
+        "timestamp",
+        "joint_id",
+        "joint_name",
+        "x",
+        "y",
+        "z"
+    ])
+
+    while True:
+        ret, frame = cap.read()
+        if not ret:
+            break
+
+        timestamp = frame_index / fps
+
+        kp2d = get_hand_keypoints_2d(frame)
+        if kp2d is not None:
+            pred_3d = infer_frame(frame, kp2d)
+
+            for joint_id, joint in enumerate(pred_3d):
+                x = float(joint[0])
+                y = float(joint[1])
+                z = float(joint[2])
+
+                writer.writerow([
+                    frame_index,
+                    timestamp,
+                    joint_id,
+                    JOINTS[joint_id],
+                    x,
+                    y,
+                    z
+                ])
+
+            print(
+                f"Frame {frame_index} processed"
+            )
+
+        else:
+            print(f"Frame {frame_index} - No hand detected")
+
+        frame_index += 1
 
 cap.release()
 hands.close()
+
+print(f"Video completado y csv guardado {OUTPUT_CSV}")
