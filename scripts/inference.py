@@ -23,20 +23,20 @@ JOINTS = [
     "THUMB_IP",
     "THUMB_TIP",
 
-    "INDEX_CMC",
-    "INDEX_MCP",
-    "INDEX_IP",
-    "INDEX_TIP",
+    "INDEX_FINGER_CMC",
+    "INDEX_FINGER_MCP",
+    "INDEX_FINGER_IP",
+    "INDEX_FINGER_TIP",
 
-    "MIDDLE_CMC",
-    "MIDDLE_MCP",
-    "MIDDLE_IP",
-    "MIDDLE_TIP", 
+    "MIDDLE_FINGER_CMC",
+    "MIDDLE_FINGER_MCP",
+    "MIDDLE_FINGER_IP",
+    "MIDDLE_FINGER_TIP", 
 
-    "RING_CMC",
-    "RING_MCP",
-    "RING_IP",
-    "RING_TIP",
+    "RING_FINGER_CMC",
+    "RING_FINGER_MCP",
+    "RING_FINGER_IP",
+    "RING_FINGER_TIP",
 
     "PNIKY_CMC",
     "PINKY_MCP",
@@ -102,6 +102,18 @@ def get_hand_keypoints_2d(image):
         return None
 
 
+csv_header = []
+
+for joint_name in JOINTS:
+
+    csv_header.extend([
+        f"{joint_name}_x",
+        f"{joint_name}_y",
+        f"{joint_name}_z"
+    ])
+
+csv_header.append("fnum")
+
 cap = cv2.VideoCapture(VIDEO_PATH)
 
 frame_index = 0
@@ -111,16 +123,7 @@ with open(OUTPUT_CSV, mode="w", newline="") as csv_file:
 
     writer = csv.writer(csv_file)
 
-    #Header del CSV
-    writer.writerow([
-        "frame",
-        "timestamp",
-        "joint_id",
-        "joint_name",
-        "x",
-        "y",
-        "z"
-    ])
+    writer.writerow(csv_header)
 
     while True:
         ret, frame = cap.read()
@@ -133,20 +136,17 @@ with open(OUTPUT_CSV, mode="w", newline="") as csv_file:
         if kp2d is not None:
             pred_3d = infer_frame(frame, kp2d)
 
-            for joint_id, joint in enumerate(pred_3d):
-                x = float(joint[0])
-                y = float(joint[1])
-                z = float(joint[2])
-
-                writer.writerow([
-                    frame_index,
-                    timestamp,
-                    joint_id,
-                    JOINTS[joint_id],
-                    x,
-                    y,
-                    z
+            row = []
+            for joint in pred_3d:
+                row.extend([
+                    float(joint[0]),
+                    float(joint[1]),
+                    float(joint[2]),
                 ])
+
+            row.append(frame_index)
+
+            writer.writerow(row)
 
             print(
                 f"Frame {frame_index} processed"
